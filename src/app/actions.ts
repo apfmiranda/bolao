@@ -184,6 +184,16 @@ export async function submitPrediction(
   const gamePredictions = predictionsData.predictions.filter(
     (p) => p.gameId === gameId,
   );
+
+  const duplicateScore = gamePredictions.some(
+    (p) => p.brazilScore === brazilScore && p.opponentScore === opponentScore,
+  );
+  if (duplicateScore) {
+    return {
+      success: false,
+      error: "Este placar já foi escolhido por outro participante para este jogo.",
+    };
+  }
   const predictedParticipantIds = new Set(
     gamePredictions.map((p) => p.participantId),
   );
