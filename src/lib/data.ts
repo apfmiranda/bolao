@@ -7,8 +7,8 @@ import type {
   DraftOrderData,
 } from "./types";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const TEMPLATE_DIR = path.join(process.cwd(), "data-template");
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data");
+const TEMPLATE_DIR = process.env.TEMPLATE_DIR || path.join(process.cwd(), "data-template");
 
 function filePath(name: string): string {
   return path.join(DATA_DIR, name);
