@@ -164,14 +164,16 @@ export default async function DashboardPage() {
       </main>
 
       {/* Admin link */}
-      <footer className="max-w-3xl mx-auto px-4 py-8 text-center">
-        <Link
-          href="/admin"
-          className="text-xs text-text-muted hover:text-text-secondary transition-colors"
-        >
-          Painel Admin →
-        </Link>
-      </footer>
+      {decodedName === "Alexandre" && (
+        <footer className="max-w-3xl mx-auto px-4 py-8 text-center">
+          <Link
+            href="/admin"
+            className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+          >
+            Painel Admin →
+          </Link>
+        </footer>
+      )}
     </div>
   );
 }

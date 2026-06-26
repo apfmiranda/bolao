@@ -86,17 +86,26 @@ export async function loginParticipant(
 export async function drawDraftOrder(
   gameId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const [gamesData, participantsData, draftOrderData] = await Promise.all([
-    readGames(),
-    readParticipants(),
-    readDraftOrders(),
-  ]);
+  const [gamesData, participantsData, draftOrderData, predictionsData] =
+    await Promise.all([
+      readGames(),
+      readParticipants(),
+      readDraftOrders(),
+      readPredictions(),
+    ]);
 
   const game = gamesData.games.find((g) => g.id === gameId);
   if (!game) return { success: false, error: "Jogo não encontrado." };
 
-  if (game.draftDrawn) {
-    return { success: false, error: "O sorteio já foi realizado para este jogo." };
+  const hasPredictions = predictionsData.predictions.some(
+    (p) => p.gameId === gameId,
+  );
+
+  if (game.draftDrawn && hasPredictions) {
+    return {
+      success: false,
+      error: "O sorteio já foi realizado e existem palpites registrados para este jogo.",
+    };
   }
 
   if (participantsData.participants.length === 0) {

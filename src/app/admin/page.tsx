@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   addGame,
   setGameStatus,
@@ -80,6 +81,8 @@ const COUNTRIES_LIST = [
 ];
 
 export default function AdminPage() {
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [games, setGames] = useState<Game[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
@@ -122,9 +125,18 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchData();
-  }, []);
+    const cookiesList = document.cookie.split("; ");
+    const nameCookie = cookiesList.find((row) => row.startsWith("participantName="));
+    const decodedName = nameCookie ? decodeURIComponent(nameCookie.split("=")[1]) : "";
+
+    if (decodedName !== "Alexandre") {
+      router.replace(decodedName ? "/dashboard" : "/");
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAuthorized(true);
+      fetchData();
+    }
+  }, [router]);
 
   function showMessage(msg: string) {
     setMessage(msg);
@@ -205,7 +217,7 @@ export default function AdminPage() {
     }
   }
 
-  if (loading) {
+  if (authorized === null || loading) {
     return (
       <div className="min-h-dvh flex items-center justify-center text-text-muted">
         Carregando...
@@ -292,7 +304,7 @@ export default function AdminPage() {
 
                   <div className="flex flex-wrap gap-2 mb-3">
                     {/* Draft draw button */}
-                    {!game.draftDrawn && (
+                    {!game.draftDrawn ? (
                       <button
                         onClick={() => handleDrawDraft(game.id)}
                         className="text-xs bg-canarinho/15 text-canarinho border border-canarinho/30 px-3 py-1.5 rounded-sm
@@ -300,6 +312,16 @@ export default function AdminPage() {
                       >
                         🎲 Sortear Ordem
                       </button>
+                    ) : (
+                      game.status !== "finished" && gamePredictions.length === 0 && (
+                        <button
+                          onClick={() => handleDrawDraft(game.id)}
+                          className="text-xs bg-warning/15 text-warning border border-warning/30 px-3 py-1.5 rounded-sm
+                            hover:bg-warning/25 transition-colors font-bold"
+                        >
+                          🎲 Refazer Sorteio
+                        </button>
+                      )
                     )}
 
                     {/* Open/Close buttons */}
