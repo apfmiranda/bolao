@@ -9,6 +9,8 @@ import {
   setActualScore,
   removeParticipant,
   drawDraftOrder,
+  removeGame,
+  editGame,
 } from "@/app/actions";
 import type { Game, Participant, Prediction, DraftOrder } from "@/lib/types";
 
@@ -100,6 +102,13 @@ export default function AdminPage() {
   const [scoreGameId, setScoreGameId] = useState("");
   const [scoreBrazil, setScoreBrazil] = useState("");
   const [scoreOpponent, setScoreOpponent] = useState("");
+
+  // Edit game form
+  const [editingGameId, setEditingGameId] = useState("");
+  const [editOpponent, setEditOpponent] = useState("");
+  const [editFlag, setEditFlag] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editStage, setEditStage] = useState("");
 
   async function fetchData() {
     try {
@@ -217,6 +226,58 @@ export default function AdminPage() {
     }
   }
 
+  async function handleRemoveGame(id: string, opponent: string) {
+    if (
+      !confirm(
+        `Tem certeza que deseja remover o jogo contra ${opponent}? Todos os palpites e o sorteio deste jogo serão excluídos permanentemente.`
+      )
+    ) {
+      return;
+    }
+    const result = await removeGame(id);
+    if (result.success) {
+      showMessage("Jogo removido com sucesso!");
+      fetchData();
+    } else {
+      showMessage(result.error ?? "Erro ao remover jogo.");
+    }
+  }
+
+  function handleStartEdit(game: Game) {
+    setEditingGameId(game.id);
+    setEditOpponent(game.opponent);
+    setEditFlag(game.opponentFlag);
+    setEditDate(game.date ? game.date.substring(0, 16) : "");
+    setEditStage(game.stage);
+    setScoreGameId("");
+  }
+
+  async function handleEditGame(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingGameId || !editOpponent || !editDate || !editStage) {
+      showMessage("Preencha todos os campos.");
+      return;
+    }
+    const result = await editGame(
+      editingGameId,
+      editOpponent,
+      editFlag,
+      editDate,
+      editStage,
+    );
+    if (result.success) {
+      showMessage("Jogo atualizado com sucesso!");
+      setEditingGameId("");
+      setEditOpponent("");
+      setEditFlag("");
+      setEditDate("");
+      setEditStage("");
+      fetchData();
+    } else {
+      showMessage(result.error ?? "Erro ao atualizar jogo.");
+    }
+  }
+
   if (authorized === null || loading) {
     return (
       <div className="min-h-dvh flex items-center justify-center text-text-muted">
@@ -288,18 +349,34 @@ export default function AdminPage() {
                         {game.stage}
                       </span>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm border
-                      ${
-                        game.status === "open"
-                          ? "bg-success/15 text-success border-success/30"
-                          : game.status === "finished"
-                            ? "bg-canarinho/15 text-canarinho border-canarinho/30"
-                            : "bg-text-muted/15 text-text-muted border-text-muted/30"
-                      }`}
-                    >
-                      {game.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleStartEdit(game)}
+                        title="Editar jogo"
+                        className="text-text-muted hover:text-text-primary p-1 text-sm transition-colors cursor-pointer"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleRemoveGame(game.id, game.opponent)}
+                        title="Remover jogo"
+                        className="text-text-muted hover:text-danger p-1 text-sm transition-colors cursor-pointer"
+                      >
+                        🗑️
+                      </button>
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm border
+                        ${
+                          game.status === "open"
+                            ? "bg-success/15 text-success border-success/30"
+                            : game.status === "finished"
+                              ? "bg-canarinho/15 text-canarinho border-canarinho/30"
+                              : "bg-text-muted/15 text-text-muted border-text-muted/30"
+                        }`}
+                      >
+                        {game.status}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-3">
@@ -446,6 +523,96 @@ export default function AdminPage() {
                       >
                         Cancelar
                       </button>
+                    </form>
+                  )}
+
+                  {/* Inline edit form */}
+                  {editingGameId === game.id && (
+                    <form
+                      onSubmit={handleEditGame}
+                      className="mt-4 space-y-4 border-t border-border pt-4 animate-fade-in"
+                    >
+                      <div>
+                        <label className="block text-xs text-text-muted mb-1">
+                          País Predefinido (Preenche Adversário e Bandeira)
+                        </label>
+                        <select
+                          value={COUNTRIES_LIST.some((c) => c.name === editOpponent) ? editOpponent : ""}
+                          onChange={(e) => {
+                            const selected = COUNTRIES_LIST.find((c) => c.name === e.target.value);
+                            if (selected) {
+                              setEditOpponent(selected.name);
+                              setEditFlag(selected.flag);
+                            } else {
+                              setEditOpponent("");
+                              setEditFlag("");
+                            }
+                          }}
+                          className={inputClass}
+                        >
+                          <option value="">-- Selecione um país (opcional) --</option>
+                          {COUNTRIES_LIST.map((c) => (
+                            <option key={c.name} value={c.name}>
+                              {c.flag} {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-text-muted mb-1">Adversário</label>
+                          <input
+                            type="text"
+                            value={editOpponent}
+                            onChange={(e) => setEditOpponent(e.target.value)}
+                            className={inputClass}
+                            placeholder="Ex: Alemanha"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-text-muted mb-1">Bandeira (emoji)</label>
+                          <input
+                            type="text"
+                            value={editFlag}
+                            onChange={(e) => setEditFlag(e.target.value)}
+                            className={inputClass}
+                            placeholder="🇩🇪"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-text-muted mb-1">Data e hora (ISO)</label>
+                          <input
+                            type="datetime-local"
+                            value={editDate}
+                            onChange={(e) => setEditDate(e.target.value)}
+                            className={inputClass}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-text-muted mb-1">Fase</label>
+                          <input
+                            type="text"
+                            value={editStage}
+                            onChange={(e) => setEditStage(e.target.value)}
+                            className={inputClass}
+                            placeholder="Ex: Oitavas de Final"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button type="submit" className={`${btnPrimary} text-sm py-2 px-4`}>
+                          Salvar Alterações
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingGameId("")}
+                          className="text-xs text-text-muted hover:text-text-secondary px-3 py-2 cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     </form>
                   )}
                 </div>

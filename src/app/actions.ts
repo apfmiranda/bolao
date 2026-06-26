@@ -300,3 +300,52 @@ export async function removeParticipant(
   revalidatePath("/admin");
   return { success: true };
 }
+
+export async function removeGame(
+  gameId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const gamesData = await readGames();
+  gamesData.games = gamesData.games.filter((g) => g.id !== gameId);
+  await writeGames(gamesData);
+
+  const predictionsData = await readPredictions();
+  predictionsData.predictions = predictionsData.predictions.filter(
+    (p) => p.gameId !== gameId,
+  );
+  await writePredictions(predictionsData);
+
+  const draftOrderData = await readDraftOrders();
+  draftOrderData.draftOrders = draftOrderData.draftOrders.filter(
+    (d) => d.gameId !== gameId,
+  );
+  await writeDraftOrders(draftOrderData);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/game/${gameId}`);
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function editGame(
+  gameId: string,
+  opponent: string,
+  opponentFlag: string,
+  date: string,
+  stage: string,
+): Promise<{ success: boolean; error?: string }> {
+  const gamesData = await readGames();
+  const game = gamesData.games.find((g) => g.id === gameId);
+  if (!game) return { success: false, error: "Jogo não encontrado." };
+
+  game.opponent = opponent.trim();
+  game.opponentFlag = opponentFlag.trim();
+  game.date = date;
+  game.stage = stage.trim();
+
+  await writeGames(gamesData);
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/game/${gameId}`);
+  revalidatePath("/admin");
+  return { success: true };
+}
+
