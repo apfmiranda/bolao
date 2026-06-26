@@ -11,6 +11,74 @@ import {
 } from "@/app/actions";
 import type { Game, Participant, Prediction, DraftOrder } from "@/lib/types";
 
+const COUNTRIES_LIST = [
+  { name: "Alemanha", flag: "🇩🇪" },
+  { name: "Angola", flag: "🇦🇴" },
+  { name: "Arábia Saudita", flag: "🇸🇦" },
+  { name: "Argélia", flag: "🇩🇿" },
+  { name: "Argentina", flag: "🇦🇷" },
+  { name: "Austrália", flag: "🇦🇺" },
+  { name: "Áustria", flag: "🇦🇹" },
+  { name: "Bélgica", flag: "🇧🇪" },
+  { name: "Bolívia", flag: "🇧🇴" },
+  { name: "Brasil", flag: "🇧🇷" },
+  { name: "Camarões", flag: "🇨🇲" },
+  { name: "Canadá", flag: "🇨🇦" },
+  { name: "Chile", flag: "🇨🇱" },
+  { name: "China", flag: "🇨🇳" },
+  { name: "Colômbia", flag: "🇨🇴" },
+  { name: "Coreia do Sul", flag: "🇰🇷" },
+  { name: "Costa Rica", flag: "🇨🇷" },
+  { name: "Croácia", flag: "🇭🇷" },
+  { name: "Dinamarca", flag: "🇩🇰" },
+  { name: "Egito", flag: "🇪🇬" },
+  { name: "Equador", flag: "🇪🇨" },
+  { name: "Escócia", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+  { name: "Eslováquia", flag: "🇸🇰" },
+  { name: "Eslovênia", flag: "🇸🇮" },
+  { name: "Espanha", flag: "🇪🇸" },
+  { name: "Estados Unidos", flag: "🇺🇸" },
+  { name: "França", flag: "🇫🇷" },
+  { name: "Gana", flag: "🇬🇭" },
+  { name: "Geórgia", flag: "🇬🇪" },
+  { name: "Grécia", flag: "🇬🇷" },
+  { name: "Haiti", flag: "🇭🇹" },
+  { name: "Holanda", flag: "🇳🇱" },
+  { name: "Honduras", flag: "🇭🇳" },
+  { name: "Hungria", flag: "🇭🇺" },
+  { name: "Inglaterra", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { name: "Irã", flag: "🇮🇷" },
+  { name: "Iraque", flag: "🇮🇶" },
+  { name: "Irlanda", flag: "🇮🇪" },
+  { name: "Islândia", flag: "🇮🇸" },
+  { name: "Itália", flag: "🇮🇹" },
+  { name: "Jamaica", flag: "🇯🇲" },
+  { name: "Japão", flag: "🇯🇵" },
+  { name: "Marrocos", flag: "🇲🇦" },
+  { name: "México", flag: "🇲🇽" },
+  { name: "Nigéria", flag: "🇳🇬" },
+  { name: "Noruega", flag: "🇳🇴" },
+  { name: "Nova Zelândia", flag: "🇳🇿" },
+  { name: "Panamá", flag: "🇵🇦" },
+  { name: "Paraguai", flag: "🇵🇾" },
+  { name: "Peru", flag: "🇵🇪" },
+  { name: "Polônia", flag: "🇵🇱" },
+  { name: "Portugal", flag: "🇵🇹" },
+  { name: "República Tcheca", flag: "🇨🇿" },
+  { name: "Romênia", flag: "🇷🇴" },
+  { name: "Rússia", flag: "🇷🇺" },
+  { name: "Senegal", flag: "🇸🇳" },
+  { name: "Sérvia", flag: "🇷🇸" },
+  { name: "Suécia", flag: "🇸🇪" },
+  { name: "Suíça", flag: "🇨🇭" },
+  { name: "Tunísia", flag: "🇹🇳" },
+  { name: "Turquia", flag: "🇹🇷" },
+  { name: "Ucrânia", flag: "🇺🇦" },
+  { name: "Uruguai", flag: "🇺🇾" },
+  { name: "Venezuela", flag: "🇻🇪" },
+  { name: "Wales / Gales", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿" }
+];
+
 export default function AdminPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -373,6 +441,32 @@ export default function AdminPage() {
             onSubmit={handleAddGame}
             className="bg-surface border border-border rounded-sm p-6 space-y-4"
           >
+            <div>
+              <label className="block text-xs text-text-muted mb-1">
+                País Predefinido (Preenche Adversário e Bandeira)
+              </label>
+              <select
+                value={COUNTRIES_LIST.some((c) => c.name === newOpponent) ? newOpponent : ""}
+                onChange={(e) => {
+                  const selected = COUNTRIES_LIST.find((c) => c.name === e.target.value);
+                  if (selected) {
+                    setNewOpponent(selected.name);
+                    setNewFlag(selected.flag);
+                  } else {
+                    setNewOpponent("");
+                    setNewFlag("");
+                  }
+                }}
+                className={inputClass}
+              >
+                <option value="">-- Selecione um país (opcional) --</option>
+                {COUNTRIES_LIST.map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.flag} {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-text-muted mb-1">
