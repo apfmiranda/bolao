@@ -1,0 +1,8 @@
+
+> tmp-next@0.1.0 dev
+> next dev --webpack
+
+▲ Next.js 16.2.9 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.2.139:3000
+✓ Ready in 582ms
